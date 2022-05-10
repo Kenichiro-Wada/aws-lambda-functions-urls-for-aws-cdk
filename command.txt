@@ -1,0 +1,444 @@
+1.
+sudo yum -y install jq
+
+2.
+mkdir lambda-function-urls-cdk
+cd lambda-function-urls-cdk
+
+3.
+cdk init app --language typescript
+
+4.
+import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { Construct } from 'constructs';
+
+
+export class LambdaFunctionUrlsCdkStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    // L1 Constract
+    const lambdaFunctionUrlsL1 = new lambda.Function(this, 'LambdaFunctionUrlsL1', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'index.handler',
+      timeout: Duration.seconds(10),
+    });
+
+    /**
+     * Lambda Url
+     * Referenced https://github.com/neilkuan/cdk-lambda-url-sample
+     * See https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-url.html
+     */
+    new CfnResource(this, 'lambdaFunctionUrlsL1Permision', {
+      type: 'AWS::Lambda::Permission',
+      properties: {
+        FunctionName: lambdaFunctionUrlsL1.functionName,
+        Principal: '*',
+        Action: 'lambda:InvokeFunctionUrl',
+          FunctionUrlAuthType: 'NONE'
+      }
+    });
+    const lambdaFunctionUrlsL1Cfn = new CfnResource(this,  'LambdaFunctionUrlsL1Cfn' , {
+      type: 'AWS::Lambda::Url',
+      properties: {
+        TargetFunctionArn: lambdaFunctionUrlsL1.functionArn,
+        AuthType: 'NONE'
+      }
+    });
+
+    new CfnOutput(this, 'TheLambdaFunctionUrlsL1Url', {
+      value: lambdaFunctionUrlsL1Cfn.getAtt('FunctionUrl').toString(),
+    });
+  }
+}
+
+
+5.
+exports.handler = async function (event: any, context: any): Promise<any> {
+  console.log('event:', JSON.stringify(event));
+  console.log('context:', JSON.stringify(context));
+
+  const response: any = {
+    statusCode: 200,
+    body: JSON.stringify(`Hello from Lambda Functions Urls! you request is ${event.requestContext.http.method}`),
+  };
+  return response;
+}
+
+6.
+curl [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsL1Urlの値] | jq
+
+
+7.
+import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { Construct } from 'constructs';
+
+
+export class LambdaFunctionUrlsCdkStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    // L1 Constract
+    const lambdaFunctionUrlsL1 = new lambda.Function(this, 'LambdaFunctionUrlsL1', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'index.handler',
+      timeout: Duration.seconds(10),
+    });
+
+    /**
+     * Lambda Url
+     * Referenced https://github.com/neilkuan/cdk-lambda-url-sample
+     * See https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-url.html
+     */
+    new CfnResource(this, 'lambdaFunctionUrlsL1Permision', {
+      type: 'AWS::Lambda::Permission',
+      properties: {
+        FunctionName: lambdaFunctionUrlsL1.functionName,
+        Principal: '*',
+        Action: 'lambda:InvokeFunctionUrl',
+          FunctionUrlAuthType: 'NONE'
+      }
+    });
+    const lambdaFunctionUrlsL1Cfn = new CfnResource(this,  'LambdaFunctionUrlsL1Cfn' , {
+      type: 'AWS::Lambda::Url',
+      properties: {
+        TargetFunctionArn: lambdaFunctionUrlsL1.functionArn,
+        AuthType: 'NONE'
+      }
+    });
+
+    new CfnOutput(this, 'TheLambdaFunctionUrlsL1Url', {
+      value: lambdaFunctionUrlsL1Cfn.getAtt('FunctionUrl').toString(),
+    });
+
+    // L2 Constract
+    const lambdaFunctionUrlsL2 = new lambda.Function(this, 'LambdaFunctionUrlsL2', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'index.handler',
+      timeout: Duration.seconds(10),
+    });
+    const lambdaFunctionUrlsL2Url = new lambda.FunctionUrl(this, 'LambdaFunctionUrlsL2Url', {
+      function: lambdaFunctionUrlsL2,
+      authType: lambda.FunctionUrlAuthType.NONE
+    });
+    new CfnOutput(this, 'TheLambdaFunctionUrlsL2Url', {
+      value: lambdaFunctionUrlsL2Url.url,
+    });
+  }
+}
+
+8.
+curl -X POST -H "Content-Type: application/json" -d '{"Key":"aaaa", "Value":"bbb"}' [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsL2Urlの値] | jq
+
+
+9.
+import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
+import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import { Construct } from 'constructs';
+import { CfnInternetGateway, CfnVPCGatewayAttachment, DefaultInstanceTenancy, RouterType, Subnet } from 'aws-cdk-lib/aws-ec2';
+
+
+export class LambdaFunctionUrlsCdkStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    // L1 Constract
+    const lambdaFunctionUrlsL1 = new lambda.Function(this, 'LambdaFunctionUrlsL1', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'index.handler',
+      timeout: Duration.seconds(10),
+    });
+
+    /**
+     * Lambda Url
+     * Referenced https://github.com/neilkuan/cdk-lambda-url-sample
+     * See https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-url.html
+     */
+    new CfnResource(this, 'lambdaFunctionUrlsL1Permision', {
+      type: 'AWS::Lambda::Permission',
+      properties: {
+        FunctionName: lambdaFunctionUrlsL1.functionName,
+        Principal: '*',
+        Action: 'lambda:InvokeFunctionUrl',
+          FunctionUrlAuthType: 'NONE'
+      }
+    });
+    const lambdaFunctionUrlsL1Cfn = new CfnResource(this,  'LambdaFunctionUrlsL1Cfn' , {
+      type: 'AWS::Lambda::Url',
+      properties: {
+        TargetFunctionArn: lambdaFunctionUrlsL1.functionArn,
+        AuthType: 'NONE'
+      }
+    });
+
+    new CfnOutput(this, 'TheLambdaFunctionUrlsL1Url', {
+      value: lambdaFunctionUrlsL1Cfn.getAtt('FunctionUrl').toString(),
+    });
+
+    // L2 Constract
+    const lambdaFunctionUrlsL2 = new lambda.Function(this, 'LambdaFunctionUrlsL2', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'api.handler',
+      timeout: Duration.seconds(10),
+    });
+    const lambdaFunctionUrlsL2Url = new lambda.FunctionUrl(this, 'LambdaFunctionUrlsL2Url', {
+      function: lambdaFunctionUrlsL2,
+      authType: lambda.FunctionUrlAuthType.NONE
+    });
+    new CfnOutput(this, 'TheLambdaFunctionUrlsL2Url', {
+      value: lambdaFunctionUrlsL2Url.url,
+    });
+
+    /**
+     * DynamoDB
+     */
+     const keyName:string = 'title';
+     const songsTable = new dynamodb.Table(this, 'SongsTable', {
+      partitionKey: {
+        name: keyName,
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    });
+    lambdaFunctionUrlsL2.addEnvironment('DYNAMODB_TABLE_NAME',songsTable.tableName);
+    lambdaFunctionUrlsL2.addEnvironment('DYNAMODB_TABLE_KEY_NAME',keyName);
+    songsTable.grantReadWriteData(lambdaFunctionUrlsL2);
+
+  }
+}
+
+10.
+
+const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient();
+const tableName: string = String(
+  process.env.DYNAMODB_TABLE_NAME
+);
+const keyName: string = String(
+  process.env.DYNAMODB_TABLE_KEY_NAME
+);
+
+async function getItems(
+  ): Promise<any> {
+  const params: any = {
+    TableName: tableName,
+  };
+  try {
+    const result: any = await docClient.scan(params).promise();
+    return result.Items;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+async function getItem(queryStringParamaters: any
+  ): Promise<any> {
+  const params: any = {
+    TableName: tableName,
+    Key: {
+      keyName : queryStringParamaters.title
+    },
+  };
+  try {
+    const result: any = await docClient.get(params).promise();
+    return result.Items;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+async function putItem(body: any
+  ): Promise<any> {
+  const param: any = {
+    TableName: tableName,
+    Item: body
+  }
+  try {
+    return await docClient.put(param).promise();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+
+}
+
+exports.handler = async function (event: any, context: any): Promise<any> {
+  console.log('event:', JSON.stringify(event));
+  console.log('context:', JSON.stringify(context));
+  const method: string = event.requestContext.http.method;
+
+  try {
+    if (method == 'POST') {
+      const body = JSON.parse(event.body);
+      const result = await putItem(body);
+      if (result) {
+        return {
+          statusCode: 200,
+          body: JSON.stringify('Put Item Success.'),
+        };
+      } else {
+        return {
+          statusCode: 500,
+          body: JSON.stringify(`Internal Server Error.`),
+        };
+
+      }
+    } else if (method == 'GET')  {
+      let items;
+      if (event.queryStringParameters) {
+        items = await getItem(event.queryStringParameters)
+      } else {
+        items = await getItems();
+      }
+      return {
+        statusCode: 200,
+        body: JSON.stringify(items),
+      };
+    } else {
+      // GET/POST以外
+      return {
+        statusCode: 200,
+        body: JSON.stringify(`Hello from Lambda Functions Urls! you request is ${event.requestContext.http.method}`),
+      };
+    }
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify(`Internal Server Error.`),
+    };
+  }
+
+}
+
+11.
+curl -X POST -H "Content-Type: application/json" -d '{"title":"DEEP FOREST", "artist":"DAI"}' [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsL2Urlの値] | jq
+curl -X POST -H "Content-Type: application/json" -d '{"title":"TRUE SONG", "artist":"DAI"}' [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsL2Urlの値] | jq
+curl -X POST -H "Content-Type: application/json" -d '{"title":"GATE OF HEAVEN", "artist":"DAI"}' [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsL2Urlの値] | jq
+
+curl [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsL2Urlの値] | jq
+
+
+12.
+import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as ec2 from 'aws-cdk-lib/aws-ec2'
+import { Construct } from 'constructs';
+import { DefaultInstanceTenancy } from 'aws-cdk-lib/aws-ec2';
+
+
+export class LambdaFunctionUrlsCdkStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    // L1 Constract
+    const lambdaFunctionUrlsL1 = new lambda.Function(this, 'LambdaFunctionUrlsL1', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'index.handler',
+      timeout: Duration.seconds(10),
+    });
+
+    /**
+     * Lambda Url
+     * Referenced https://github.com/neilkuan/cdk-lambda-url-sample
+     * See https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-url.html
+     */
+    new CfnResource(this, 'lambdaFunctionUrlsL1Permision', {
+      type: 'AWS::Lambda::Permission',
+      properties: {
+        FunctionName: lambdaFunctionUrlsL1.functionName,
+        Principal: '*',
+        Action: 'lambda:InvokeFunctionUrl',
+          FunctionUrlAuthType: 'NONE'
+      }
+    });
+    const lambdaFunctionUrlsL1Cfn = new CfnResource(this,  'LambdaFunctionUrlsL1Cfn' , {
+      type: 'AWS::Lambda::Url',
+      properties: {
+        TargetFunctionArn: lambdaFunctionUrlsL1.functionArn,
+        AuthType: 'NONE'
+      }
+    });
+
+    new CfnOutput(this, 'TheLambdaFunctionUrlsL1Url', {
+      value: lambdaFunctionUrlsL1Cfn.getAtt('FunctionUrl').toString(),
+    });
+
+    // L2 Constract
+    const lambdaFunctionUrlsL2 = new lambda.Function(this, 'LambdaFunctionUrlsL2', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'api.handler',
+      timeout: Duration.seconds(10),
+    });
+    const lambdaFunctionUrlsL2Url = new lambda.FunctionUrl(this, 'LambdaFunctionUrlsL2Url', {
+      function: lambdaFunctionUrlsL2,
+      authType: lambda.FunctionUrlAuthType.NONE
+    });
+    new CfnOutput(this, 'TheLambdaFunctionUrlsL2Url', {
+      value: lambdaFunctionUrlsL2Url.url,
+    });
+
+    /**
+     * DynamoDB
+     */
+     const keyName:string = 'title';
+     const songsTable = new dynamodb.Table(this, 'SongsTable', {
+      partitionKey: {
+        name: keyName,
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    });
+    lambdaFunctionUrlsL2.addEnvironment('DYNAMODB_TABLE_NAME',songsTable.tableName);
+    lambdaFunctionUrlsL2.addEnvironment('DYNAMODB_TABLE_KEY_NAME',keyName);
+    songsTable.grantReadWriteData(lambdaFunctionUrlsL2);
+
+    /**
+     * VPC
+     */
+     const vpc = new ec2.Vpc(this, 'LambdaFunctionUrlsVpc', {
+      cidr : '10.0.0.0/16',
+      defaultInstanceTenancy: DefaultInstanceTenancy.DEFAULT,
+      enableDnsSupport: true,
+      enableDnsHostnames: true,
+      subnetConfiguration: [
+        { cidrMask: 24, name: 'PublicSubnet', subnetType: ec2.SubnetType.PUBLIC },
+        { cidrMask: 24, name: 'PrivateSubnet', subnetType: ec2.SubnetType.PRIVATE_ISOLATED},
+      ]
+    });
+
+    /**
+     * VPC Lambda
+     */
+    const lambdaFunctionUrlsVpc = new lambda.Function(this, 'LambdaFunctionUrlsForVpc', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
+      handler: 'index.handler',
+      timeout: Duration.seconds(10),
+      vpc: vpc
+    });
+    const lambdaFunctionUrlsVpcUrl = new lambda.FunctionUrl(this, 'LambdaFunctionUrlsVpcUrl', {
+      function: lambdaFunctionUrlsVpc,
+      authType: lambda.FunctionUrlAuthType.NONE
+    });
+    new CfnOutput(this, 'TheLambdaFunctionUrlsVpcUrl', {
+      value: lambdaFunctionUrlsVpcUrl.url,
+    });
+  }
+}
+
+13
+curl -X POST -H "Content-Type: application/json" -d '{"Key":"aaaa", "Value":"bbb"}' [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsVpcUrlの値] | jq
