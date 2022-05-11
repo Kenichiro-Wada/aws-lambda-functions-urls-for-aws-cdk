@@ -138,7 +138,6 @@ curl -X POST -H "Content-Type: application/json" -d '{"Key":"aaaa", "Value":"bbb
 
 9.
 import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
-import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
