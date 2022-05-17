@@ -137,11 +137,10 @@ curl -X POST -H "Content-Type: application/json" -d '{"Key":"aaaa", "Value":"bbb
 
 
 9.
-import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
+import { Stack, StackProps, Duration, CfnResource, CfnOutput,RemovalPolicy } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
-import { CfnInternetGateway, CfnVPCGatewayAttachment, DefaultInstanceTenancy, RouterType, Subnet } from 'aws-cdk-lib/aws-ec2';
 
 
 export class LambdaFunctionUrlsCdkStack extends Stack {
@@ -207,6 +206,7 @@ export class LambdaFunctionUrlsCdkStack extends Stack {
         type: dynamodb.AttributeType.STRING,
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
     });
     lambdaFunctionUrlsL2.addEnvironment('DYNAMODB_TABLE_NAME',songsTable.tableName);
     lambdaFunctionUrlsL2.addEnvironment('DYNAMODB_TABLE_KEY_NAME',keyName);
@@ -329,7 +329,7 @@ curl [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsL2Urlの値] | jq
 
 
 12.
-import { Stack, StackProps, Duration, CfnResource, CfnOutput } from 'aws-cdk-lib';
+import { Stack, StackProps, Duration, CfnResource, CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
@@ -400,6 +400,7 @@ export class LambdaFunctionUrlsCdkStack extends Stack {
         type: dynamodb.AttributeType.STRING,
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY
     });
     lambdaFunctionUrlsL2.addEnvironment('DYNAMODB_TABLE_NAME',songsTable.tableName);
     lambdaFunctionUrlsL2.addEnvironment('DYNAMODB_TABLE_KEY_NAME',keyName);
@@ -438,6 +439,7 @@ export class LambdaFunctionUrlsCdkStack extends Stack {
     });
   }
 }
+
 
 13
 curl -X POST -H "Content-Type: application/json" -d '{"Key":"aaaa", "Value":"bbb"}' [LambdaFunctionUrlsCdkStack.TheLambdaFunctionUrlsVpcUrlの値] | jq
